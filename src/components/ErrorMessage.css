@@ -1,0 +1,19 @@
+.error-message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  background: #fdecea;
+  color: #c62828;
+  font-size: 0.8rem;
+  border-bottom: 1px solid #f5c6cb;
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  color: #c62828;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 0.3rem;
+}
