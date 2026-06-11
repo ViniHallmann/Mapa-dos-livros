@@ -22,7 +22,6 @@ export default function App() {
     setSelectedBook(null);
     setCountries([]);
     setCountryError('');
-
     try {
       const res = await fetch(
         `https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&limit=20`
@@ -56,18 +55,49 @@ export default function App() {
 
     setLoadingCountries(true);
     try {
-      const res = await fetch(
-        `https://restcountries.com/v3.1/lang/${langName}?fields=name,cca3,latlng,flag`
-      );
-      if (!res.ok) {
-        if (res.status === 404) {
-          setCountries([]);
-          return;
-        }
-        throw new Error('Erro ao buscar paises na REST Countries API.');
+      // Busca todos os países e filtra pelo idioma exato no cliente
+      // A v5 não suporta filtro exato por idioma via query param
+      let allCountries = [];
+      let offset = 0;
+      const limit = 100;
+
+      while (true) {
+        const res = await fetch(
+          `/api/countries?response_fields=names.common,codes.alpha_3,coordinates,flag.emoji,languages&limit=${limit}&offset=${offset}`,
+          {
+            headers: {
+              'Authorization': 'Bearer rc_live_3a87ed3cbd9b41fcacc0318a08a09abb'
+            }
+          }
+        );
+        if (!res.ok) throw new Error('Erro ao buscar paises na REST Countries API.');
+        const data = await res.json();
+        const objects = data?.data?.objects ?? [];
+        allCountries = allCountries.concat(objects);
+        if (!data?.data?.meta?.more) break;
+        offset += limit;
       }
-      const data = await res.json();
-      setCountries(Array.isArray(data) ? data : []);
+
+      // Filtra países que têm o idioma exato
+      const filtered = allCountries.filter(c =>
+        Array.isArray(c.languages) &&
+        c.languages.some(l =>
+          l.name?.toLowerCase() === langName.toLowerCase() ||
+          l.iso639_2b?.toLowerCase() === primaryLang.toLowerCase()
+        )
+      );
+
+      if (filtered.length === 0) {
+        setCountries([]);
+        return;
+      }
+      console.log('todos os idiomas:', languages);
+      setCountries(filtered.map(c => ({
+        name: { common: c.names?.common },
+        cca3: c.codes?.alpha_3,
+        latlng: c.coordinates ? [c.coordinates.lat, c.coordinates.lng] : null,
+        flags: { emoji: c.flag?.emoji },
+      })));
     } catch (err) {
       setCountryError(err.message || 'Erro ao buscar paises.');
     } finally {
@@ -81,7 +111,6 @@ export default function App() {
         <h1>Mapa de Livros</h1>
         <p>Pesquise um livro e visualize no mapa os paises do seu idioma</p>
       </header>
-
       <div className="content">
         <div className="sidebar">
           <SearchBar onSearch={searchBooks} loading={loading} />
@@ -98,7 +127,6 @@ export default function App() {
             countryError={countryError}
           />
         </div>
-
         <div className="map-container">
           <MapView countries={countries} />
         </div>

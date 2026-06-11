@@ -17,21 +17,19 @@ function FitBounds({ bounds }) {
 export default function MapView({ countries }) {
   const geoJsonData = useMemo(() => {
     if (!countries || countries.length === 0) return null;
-
     const features = countries
       .filter((c) => c.latlng && c.latlng.length === 2)
       .map((c) => ({
         type: 'Feature',
         properties: {
           name: c.name.common,
-          flag: c.flag,
+          flag: c.flags?.emoji ?? '',
         },
         geometry: {
           type: 'Point',
           coordinates: [c.latlng[1], c.latlng[0]],
         },
       }));
-
     return { type: 'FeatureCollection', features };
   }, [countries]);
 

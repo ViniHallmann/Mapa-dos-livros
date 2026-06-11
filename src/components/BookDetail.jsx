@@ -56,8 +56,8 @@ export default function BookDetail({ book, countries, loadingCountries, countryE
         {countries.length > 0 && (
           <div className="countries-list">
             {countries.map((c) => (
-              <span key={c.cca3} className="country-tag">
-                {c.flag} {c.name.common}
+              <span key={c.cca3 || c.name.common} className="country-tag">
+                {c.flags?.emoji} {c.name.common}
               </span>
             ))}
           </div>
